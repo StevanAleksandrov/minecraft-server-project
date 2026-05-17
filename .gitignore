@@ -1,0 +1,29 @@
+# Environment files
+.env
+*.env
+
+# Secrets / keys
+*.key
+*.pem
+*.ppk
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Logs
+*.log
+logs/
+
+# Minecraft runtime data if mounted locally
+data/
+world/
+server.properties
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
