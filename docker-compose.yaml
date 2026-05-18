@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: minecraft-server:latest
     container_name: minecraft-server
     environment:
       MEMORY_MIN: "1G"
