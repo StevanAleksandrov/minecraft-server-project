@@ -36,13 +36,17 @@ Main components:
 ├── .gitignore
 ├── Dockerfile
 ├── docker-compose.yaml
+├── entrypoint.sh
+├── example.env
 └── README.md
 ```
 
 Repository files:
 
 - `Dockerfile` - builds the custom Minecraft server image
-- `docker-compose.yaml` - defines service configuration, ports, environment variables, volume, and restart policy
+- `docker-compose.yaml` - defines the service configuration, port mapping, volume, restart policy, and environment file usage
+- `entrypoint.sh` - prepares `eula.txt`, updates selected `server.properties` values, and starts the Minecraft server
+- `example.env` - provides default environment values for local configuration
 - `.gitignore` - excludes local files, secrets, and temporary development files
 - `README.md` - documents setup, configuration, operation, and testing
 
@@ -68,54 +72,117 @@ git clone https://github.com/StevanAleksandrov/minecraft-server-project.git
 cd minecraft-server-project
 ```
 
-3. Build and start the Minecraft server:
+3. Create the environment file from the template:
+
+```bash
+cp example.env .env
+```
+
+On Windows PowerShell, use:
+
+```powershell
+Copy-Item example.env .env
+```
+
+4. Build and start the Minecraft server:
 
 ```bash
 docker compose up -d --build
 ```
 
-4. Check the service status:
+5. Check the service status:
 
 ```bash
 docker compose ps
 ```
 
-5. Follow the server logs:
+6. Follow the server logs:
 
 ```bash
 docker compose logs -f mc-server
 ```
+The server is available locally on `localhost:8888` with the default `HOST_PORT` value.
 
-The server is available locally on `localhost:8888`.
-
-On a cloud VM, the server is available on `<server-ip>:8888`.
+On a cloud VM, the server is available on `<server-ip>:8888` with the default `HOST_PORT` value.
 
 ## Usage
 
-The Minecraft server service is configured in `docker-compose.yaml`.
+The Minecraft server service is configured through `docker-compose.yaml` and an `.env` file.
 
 By starting the container, the Minecraft EULA is accepted automatically through the generated `eula.txt` file. Only run the server if you agree to the Minecraft EULA.
 
+### Environment Configuration
+
+The project uses an `.env` file for runtime configuration.
+
+Create the local `.env` file from the provided template:
+
+```bash
+cp example.env .env
+```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item example.env .env
+```
+
+The `.env` file is ignored by Git and should not be committed. The `example.env` file is committed as a template with default values.
+
+Available configuration values:
+
+- `MEMORY_MIN` - minimum Java heap size
+- `MEMORY_MAX` - maximum Java heap size
+- `HOST_PORT` - host port mapped to the Minecraft server port
+- `MAX_PLAYERS` - maximum number of players allowed on the server
+- `MOTD` - server message of the day
+- `MINECRAFT_SERVER_URL` - official Minecraft server JAR download URL
+
 ### Memory Settings
 
-```yaml
-environment:
-  MEMORY_MIN: "1G"
-  MEMORY_MAX: "2G"
+Memory settings are configured in the `.env` file:
+
+```env
+MEMORY_MIN=1G
+MEMORY_MAX=2G
 ```
 
 These values can be adjusted based on available resources and expected player count.
 
 ### Port Mapping
 
-```yaml
-ports:
-  - "8888:25565"
+The external host port is configured through the `HOST_PORT` value in the `.env` file:
+
+```env
+HOST_PORT=8888
 ```
 
-This maps the public host or VM port `8888` to the internal Minecraft server port `25565` inside the container.
+In `docker-compose.yaml`, this value is mapped to the internal Minecraft server port `25565`:
 
-To use a different external port, modify the first value (e.g., `9999:25565`) and restart the service.
+```yaml
+ports:
+  - "${HOST_PORT}:25565"
+```
+
+### Player Limit
+
+The maximum number of players can be configured through the `.env` file:
+
+```env
+MAX_PLAYERS=10
+```
+
+During container startup, this value is written to `/data/server.properties`.
+
+### Message of the Day
+
+The server message of the day can be configured through the `.env` file:
+
+```env
+MOTD=DevSecOps Minecraft Server
+```
+
+During container startup, this value is written to `/data/server.properties`.
 
 ### Persistent Data Volume
 
@@ -128,7 +195,7 @@ The Dockerfile stores the Minecraft server application under `/opt/minecraft` an
 
 ### Server Version
 
-The Minecraft server download URL is configured as a build argument in the Dockerfile.
+The Minecraft server download URL is configured through the `MINECRAFT_SERVER_URL` value in the `.env` file and passed as a build argument to the Dockerfile.
 
 The server JAR should be downloaded from the official Minecraft Java server download page:
 
@@ -139,7 +206,7 @@ https://www.minecraft.net/de-de/download
 To update the server version:
 
 1. Locate the new Minecraft server JAR URL from official sources
-2. Update the `MINECRAFT_SERVER_URL` build argument in the Dockerfile
+2. Update the `MINECRAFT_SERVER_URL` value in `.env`
 3. Rebuild the image with `docker compose up -d --build`
 
 ## Operations
@@ -182,17 +249,32 @@ docker exec -it minecraft-server sh
 
 ## Testing
 
-### Check if the container is running:
+### Check if the container is running
 
 ```bash
 docker compose ps
 ```
 
-Expected port mapping:
+Expected port mapping with the default configuration:
 
-`0.0.0.0:8888->25565/tcp`
+```text
+0.0.0.0:8888->25565/tcp
+```
 
-### Check the server logs:
+### Check environment-based server configuration
+
+```bash
+docker exec -it minecraft-server sh -c "grep -E '^(max-players|motd)=' /data/server.properties"
+```
+
+Expected output:
+
+```text
+max-players=10
+motd=DevSecOps Minecraft Server
+```
+
+### Check the server logs
 
 ```bash
 docker compose logs -f mc-server
@@ -200,7 +282,9 @@ docker compose logs -f mc-server
 
 A successful startup includes a message similar to:
 
-`Done (...)! For help, type "help"`
+```text
+Done (...)! For help, type "help"
+```
 
 ### Check generated server data:
 
