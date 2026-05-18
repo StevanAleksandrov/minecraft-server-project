@@ -7,6 +7,8 @@ ARG MINECRAFT_SERVER_URL="https://piston-data.mojang.com/v1/objects/97ccd4c0ed3f
 ENV MEMORY_MIN="1G"
 ENV MEMORY_MAX="2G"
 ENV SERVER_JAR="/opt/minecraft/server.jar"
+ENV MAX_PLAYERS="10"
+ENV MOTD="DevSecOps Minecraft Server"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
@@ -15,6 +17,12 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+
+# Ensure Unix line endings and executable permissions for the entrypoint script
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 25565
 
-CMD ["sh", "-c", "echo \"eula=true\" > /data/eula.txt && exec java -Xms${MEMORY_MIN} -Xmx${MEMORY_MAX} -jar ${SERVER_JAR} nogui"]
+CMD ["sh", "/usr/local/bin/entrypoint.sh"]
