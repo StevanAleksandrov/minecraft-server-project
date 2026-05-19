@@ -33,6 +33,8 @@ Main components:
 
 ```text
 .
+├── docs/
+│   └── cloud-minecraft-server-checklist.pdf
 ├── .gitignore
 ├── .dockerignore
 ├── Dockerfile
