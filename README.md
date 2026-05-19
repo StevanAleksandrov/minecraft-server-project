@@ -8,7 +8,7 @@ The project does not use a prebuilt Minecraft Docker image. Instead, the Dockerf
 
 - [Repository Description](#repository-description)
 - [Repository Structure](#repository-structure)
-- [Requirements](#requirements)
+- [Prerequisites](#prerequisites)
 - [Quickstart](#quickstart)
 - [Usage](#usage)
 - [Operations](#operations)
@@ -34,6 +34,7 @@ Main components:
 ```text
 .
 ├── .gitignore
+├── .dockerignore
 ├── Dockerfile
 ├── docker-compose.yaml
 ├── entrypoint.sh
@@ -48,13 +49,15 @@ Repository files:
 - `entrypoint.sh` - prepares `eula.txt`, updates selected `server.properties` values, and starts the Minecraft server
 - `example.env` - provides default environment values for local configuration
 - `.gitignore` - excludes local files, secrets, and temporary development files
+- `.dockerignore` - excludes unnecessary local files from the Docker build context
 - `README.md` - documents setup, configuration, operation, and testing
 
-## Requirements
+## Prerequisites
 
-Make sure Git, Docker, and Docker Compose are installed before running the quickstart commands.
+Make sure the following tools are available before running the project:
 
 - Git
+- SSH access to GitHub
 - Docker
 - Docker Compose
 
@@ -63,7 +66,7 @@ Make sure Git, Docker, and Docker Compose are installed before running the quick
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/StevanAleksandrov/minecraft-server-project.git
+git clone git@github.com:StevanAleksandrov/minecraft-server-project.git
 ```
 
 2. Change into the project directory:
@@ -77,12 +80,7 @@ cd minecraft-server-project
 ```bash
 cp example.env .env
 ```
-
-On Windows PowerShell, use:
-
-```powershell
-Copy-Item example.env .env
-```
+The template contains the default configuration values, including the official Minecraft server JAR download URL used during the Docker image build.
 
 4. Build and start the Minecraft server:
 
@@ -90,26 +88,37 @@ Copy-Item example.env .env
 docker compose up -d --build
 ```
 
-5. Check the service status:
-
-```bash
-docker compose ps
-```
-
-6. Follow the server logs:
-
-```bash
-docker compose logs -f mc-server
-```
-The server is available locally on `localhost:8888` with the default `HOST_PORT` value.
-
-On a cloud VM, the server is available on `<server-ip>:8888` with the default `HOST_PORT` value.
-
 ## Usage
 
 The Minecraft server service is configured through `docker-compose.yaml` and an `.env` file.
 
 By starting the container, the Minecraft EULA is accepted automatically through the generated `eula.txt` file. Only run the server if you agree to the Minecraft EULA.
+
+### Access and Operation
+
+With the default `HOST_PORT` value, the server is available locally at:
+
+```text
+localhost:8888
+```
+
+On a cloud VM, the server is available at:
+
+```text
+<server-ip>:8888
+```
+
+Check the service status:
+
+```bash
+docker compose ps
+```
+
+Follow the server logs:
+
+```bash
+docker compose logs -f mc-server
+```
 
 ### Environment Configuration
 
@@ -119,12 +128,6 @@ Create the local `.env` file from the provided template:
 
 ```bash
 cp example.env .env
-```
-
-On Windows PowerShell:
-
-```powershell
-Copy-Item example.env .env
 ```
 
 The `.env` file is ignored by Git and should not be committed. The `example.env` file is committed as a template with default values.
@@ -197,7 +200,9 @@ The Dockerfile stores the Minecraft server application under `/opt/minecraft` an
 
 The Minecraft server download URL is configured through the `MINECRAFT_SERVER_URL` value in the `.env` file and passed as a build argument to the Dockerfile.
 
-The server JAR should be downloaded from the official Minecraft Java server download page:
+The template already contains the default official Minecraft server JAR URL. To use another version, update the `MINECRAFT_SERVER_URL` value in `.env`.
+
+The official Minecraft Java server download page is:
 
 ```text
 https://www.minecraft.net/de-de/download
@@ -205,7 +210,7 @@ https://www.minecraft.net/de-de/download
 
 To update the server version:
 
-1. Locate the new Minecraft server JAR URL from official sources
+1. Locate the new official Minecraft server JAR URL
 2. Update the `MINECRAFT_SERVER_URL` value in `.env`
 3. Rebuild the image with `docker compose up -d --build`
 
