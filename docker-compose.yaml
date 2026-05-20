@@ -1,0 +1,19 @@
+services:
+  mc-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MINECRAFT_SERVER_URL: ${MINECRAFT_SERVER_URL}
+    container_name: minecraft-server
+    env_file:
+      - .env
+    ports:
+      - "${HOST_PORT}:25565"
+    volumes:
+      - mc_data:/data
+    restart: unless-stopped
+    stop_grace_period: 1m
+
+volumes:
+  mc_data:
